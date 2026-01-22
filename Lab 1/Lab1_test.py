@@ -34,24 +34,24 @@ d = 3 * 0.3048          # bump length [m]
 t_span = (0, 1)
 t_eval = np.arange(0, 1.001, 0.001)
 
+#----------------------------------------------------------------------------------
+
 # A = 2in bump height
-for A in [2*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
+for A in [2*0.0254]:   # Set bump height (convert in to m)
     results_A_2 = []  # store all simulation cases
     for n in [0,1]:
-        # Nonlinear spring toggle
-        non_lin = n
+        # Nonlinear spring 
         G = (ks / (3 * (ms * g)**(2/3)))**3
 
         # Initial conditions: [ps, pus, qs, qt]
-        if non_lin == 1:
+        if n == 1:
             initial = [0, 0, (ms * g / G)**(1/3), mt * g / kt]
         else:
             initial = [0, 0, 1.0 * ms * g / ks, mt * g / kt]
 
-        for u in [20*0.46, 25*0.46, 30*0.46]:  # Loop through varying car speeds for each bump height
-            # -----------------------------
+        for u in [20*0.46, 25*0.46, 30*0.46]:  # Loop through varying car speeds for each bump height (convert mph to m/s)
+
             # Model Function
-            # -----------------------------
             def LabDemoFunc(t, s):
                 ps, pus, qs, qt = s
 
@@ -76,7 +76,7 @@ for A in [2*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
                 vus = pus / mus
 
                 # Spring force
-                if non_lin == 1:
+                if n == 1:
                     Fs = G * qs**3 + bs * (vus - vs)
                     Fss = G * qs**3
                 else:
@@ -139,16 +139,17 @@ for A in [2*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
                 "Fss": Fss,
                 "dps": dps,
                 "ms": ms,
-                "lin": non_lin
+                "lin": n
             })
-            # print(results)
-
+    # print(results_A_2)
+            # qs_array = results_A_2[qs]
+            # print(qs_array(0))
     # Plot Results
 
     # Sprung masss acceleration
     plt.figure()
     for r in results_A_2:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
         plt.plot(r["t"], (r["dps"]/r["ms"]), label=label)
         plt.ylabel("Acceleration [m/s^2]")
         plt.legend()
@@ -157,16 +158,18 @@ for A in [2*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.plot(t, Y, label="Road", color="k")
     plt.ylabel("Road Input [m]")
     plt.xlabel("Time (s)")
-    plt.legend()
-    plt.title('Accelration of Sprung Mass')
+    plt.legend(loc='lower right')
+    plt.title('Accelration of Sprung Mass (A = 2in)')
     plt.grid(True)
     plt.show()
 
     # Relative displacement across the suspension
     plt.figure()
     for r in results_A_2:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
-        plt.plot(r["t"], (r["qs"]), label=label)
+        qs_array = r["qs"]
+        print(qs_array)
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
+        plt.plot(r["t"], (r["qs"]-r["qs"][0]), label=label)
         plt.ylabel("Displacement [m]")
         plt.legend()
 
@@ -175,15 +178,15 @@ for A in [2*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.ylabel("Road Input [m]")
     plt.xlabel("Time (s)")
     plt.ylim(0,0.15)
-    plt.legend()
-    plt.title('Relative displacement across the suspension')
+    plt.legend(loc='lower right')
+    plt.title('Relative displacement across the suspension (A = 2in)')
     plt.grid(True)
     plt.show()
 
-    # Relative displacement across the suspension
+    # Tire force
     plt.figure()
     for r in results_A_2:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
         plt.plot(r["t"], (r["Ft"]), label=label)
         plt.ylabel("Tire Force [N]")
         plt.legend()
@@ -192,21 +195,22 @@ for A in [2*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.plot(t, Y, label="Road", color="k")
     plt.ylabel("Road Input [m]")
     plt.xlabel("Time (s)")
-    plt.legend()
-    plt.title('Tire Force')
+    plt.legend(loc='lower right')
+    plt.title('Tire Force (A = 2in)')
     plt.grid(True)
     plt.show()
 
+# --------------------------------------------------------------------------------------
+
 # A = 4in bump height
-for A in [4*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
+for A in [4*0.0254]:   # Loop through varying bump heights 
     results_A_4 = []
     for n in [0,1]:
         # Nonlinear spring toggle
-        non_lin = n
         G = (ks / (3 * (ms * g)**(2/3)))**3
 
         # Initial conditions: [ps, pus, qs, qt]
-        if non_lin == 1:
+        if n == 1:
             initial = [0, 0, (ms * g / G)**(1/3), mt * g / kt]
         else:
             initial = [0, 0, 1.0 * ms * g / ks, mt * g / kt]
@@ -239,7 +243,7 @@ for A in [4*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
                 vus = pus / mus
 
                 # Spring force
-                if non_lin == 1:
+                if n == 1:
                     Fs = G * qs**3 + bs * (vus - vs)
                     Fss = G * qs**3
                 else:
@@ -302,7 +306,7 @@ for A in [4*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
                 "Fss": Fss,
                 "dps": dps,
                 "ms": ms,
-                "lin": non_lin
+                "lin": n
             })
             # print(results)
 
@@ -311,7 +315,7 @@ for A in [4*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     # Sprung masss acceleration
     plt.figure()
     for r in results_A_4:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
         plt.plot(r["t"], (r["dps"]/r["ms"]), label=label)
         plt.ylabel("Acceleration [m/s^2]")
         plt.legend()
@@ -321,15 +325,15 @@ for A in [4*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.ylabel("Road Input [m]")
     plt.xlabel("Time (s)")
     plt.legend()
-    plt.title('Accelration of Sprung Mass')
+    plt.title('Accelration of Sprung Mass (A = 4in)')
     plt.grid(True)
     plt.show()
 
     # Relative displacement across the suspension
     plt.figure()
     for r in results_A_4:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
-        plt.plot(r["t"], (r["qs"]), label=label)
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
+        plt.plot(r["t"], (r["qs"] - r["qs"][0]), label=label)
         plt.ylabel("Displacement [m]")
         plt.legend()
 
@@ -339,14 +343,14 @@ for A in [4*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.xlabel("Time (s)")
     plt.ylim(0,0.15)
     plt.legend()
-    plt.title('Relative displacement across the suspension')
+    plt.title('Relative displacement across the suspension (A = 4in)')
     plt.grid(True)
     plt.show()
 
-    # Relative displacement across the suspension
+    # Tire force
     plt.figure()
     for r in results_A_4:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
         plt.plot(r["t"], (r["Ft"]), label=label)
         plt.ylabel("Tire Force [N]")
         plt.legend()
@@ -356,20 +360,20 @@ for A in [4*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.ylabel("Road Input [m]")
     plt.xlabel("Time (s)")
     plt.legend()
-    plt.title('Tire Force')
+    plt.title('Tire Force (A = 4in)')
     plt.grid(True)
     plt.show()
 
+# -------------------------------------------------------------------------------------
 # A = 6in bump height
-for A in [6*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
+for A in [6*0.0254]:   # Loop through varying bump heights
     results_A_6 = []
     for n in [0,1]:
         # Nonlinear spring toggle
-        non_lin = n
         G = (ks / (3 * (ms * g)**(2/3)))**3
 
         # Initial conditions: [ps, pus, qs, qt]
-        if non_lin == 1:
+        if n == 1:
             initial = [0, 0, (ms * g / G)**(1/3), mt * g / kt]
         else:
             initial = [0, 0, 1.0 * ms * g / ks, mt * g / kt]
@@ -402,7 +406,7 @@ for A in [6*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
                 vus = pus / mus
 
                 # Spring force
-                if non_lin == 1:
+                if n == 1:
                     Fs = G * qs**3 + bs * (vus - vs)
                     Fss = G * qs**3
                 else:
@@ -465,7 +469,7 @@ for A in [6*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
                 "Fss": Fss,
                 "dps": dps,
                 "ms": ms,
-                "lin": non_lin
+                "lin": n
             })
             # print(results)
 
@@ -474,7 +478,7 @@ for A in [6*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     # Sprung masss acceleration
     plt.figure()
     for r in results_A_6:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
         plt.plot(r["t"], (r["dps"]/r["ms"]), label=label)
         plt.ylabel("Acceleration [m/s^2]")
         plt.legend()
@@ -484,15 +488,15 @@ for A in [6*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.ylabel("Road Input [m]")
     plt.xlabel("Time (s)")
     plt.legend()
-    plt.title('Accelration of Sprung Mass')
+    plt.title('Accelration of Sprung Mass (A = 6in)')
     plt.grid(True)
     plt.show()
 
     # Relative displacement across the suspension
     plt.figure()
     for r in results_A_6:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
-        plt.plot(r["t"], (r["qs"]), label=label)
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
+        plt.plot(r["t"], (r["qs"] - r["qs"][0]), label=label)
         plt.ylabel("Displacement [m]")
         plt.legend()
 
@@ -502,14 +506,14 @@ for A in [6*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.xlabel("Time (s)")
     plt.ylim(0,0.15)
     plt.legend()
-    plt.title('Relative displacement across the suspension')
+    plt.title('Relative displacement across the suspension (A = 6in)')
     plt.grid(True)
     plt.show()
 
     # Relative displacement across the suspension
     plt.figure()
     for r in results_A_6:
-        label = f"A={r['A']:.3f} m, u={r['u']:.1f} m/s, linear = {r['lin']:.1f}"
+        label = f"A={r['A']:.2f} m, u={r['u']:.2f} m/s, non-linear = {r['lin']}"
         plt.plot(r["t"], (r["Ft"]), label=label)
         plt.ylabel("Tire Force [N]")
         plt.legend()
@@ -519,80 +523,84 @@ for A in [6*0.0254]:   # Loop through varying bump heights , 4*0.0254, 6*0.0254
     plt.ylabel("Road Input [m]")
     plt.xlabel("Time (s)")
     plt.legend()
-    plt.title('Tire Force')
+    plt.title('Tire Force (A = 6in)')
     plt.grid(True)
     plt.show()
 
-        # # Figure 1: Velocities + Road
-        # plt.figure(1)
-        # plt.plot(t, vs, label="Sprung Mass")
-        # plt.plot(t, vus, label="Unsprung Mass")
-        # plt.grid()
-        # plt.ylabel("Vertical Velocity [m/s]")
-        # #plt.ylim([-3, 3])
+# -----------------------------------------------------------------------------------------
 
-        # plt.twinx()
-        # plt.plot(t, Y, label="Road", color="k")
-        # plt.ylabel("Road Input [m]")
-        # #plt.ylim([-0.15, 0.15])
+# Old plotting info
 
-        # plt.title("Velocity of Sprung Mass, Unsprung Mass, and Road Input")
-        # plt.xlabel("Time [s]")
-        # plt.legend()
-        # plt.show()
+# # Figure 1: Velocities + Road
+# plt.figure(1)
+# plt.plot(t, vs, label="Sprung Mass")
+# plt.plot(t, vus, label="Unsprung Mass")
+# plt.grid()
+# plt.ylabel("Vertical Velocity [m/s]")
+# #plt.ylim([-3, 3])
 
-        # # Figure 2: Suspension Displacement
-        # plt.figure(2)
-        # plt.plot(t, qs, label="Suspension Displacement")
-        # plt.grid()
+# plt.twinx()
+# plt.plot(t, Y, label="Road", color="k")
+# plt.ylabel("Road Input [m]")
+# #plt.ylim([-0.15, 0.15])
 
-        # plt.twinx()
-        # plt.plot(t, Y, label="Road", color="k")
-        # plt.ylabel("Road Input [m]")
-        # #plt.ylim([0, 0.15])
+# plt.title("Velocity of Sprung Mass, Unsprung Mass, and Road Input")
+# plt.xlabel("Time [s]")
+# plt.legend()
+# plt.show()
 
-        # plt.title("Suspension Displacement with Road Input")
-        # plt.xlabel("Time [s]")
-        # plt.legend()
-        # plt.show()
+# # Figure 2: Suspension Displacement
+# plt.figure(2)
+# plt.plot(t, qs, label="Suspension Displacement")
+# plt.grid()
 
-        # # Figure 3: Tire Force
-        # plt.figure(3)
-        # plt.plot(t, Ft , label="Tire Force") # - Ft[0]
-        # plt.grid()
+# plt.twinx()
+# plt.plot(t, Y, label="Road", color="k")
+# plt.ylabel("Road Input [m]")
+# #plt.ylim([0, 0.15])
 
-        # plt.twinx()
-        # plt.plot(t, Y, label="Road", color="k")
-        # plt.ylabel("Road Input [m]")
-        # #plt.ylim([0, 0.15])
+# plt.title("Suspension Displacement with Road Input")
+# plt.xlabel("Time [s]")
+# plt.legend()
+# plt.show()
 
-        # plt.title("Tire Force")
-        # plt.xlabel("Time [s]")
-        # plt.legend()
-        # plt.show()
+# # Figure 3: Tire Force
+# plt.figure(3)
+# plt.plot(t, Ft , label="Tire Force") # - Ft[0]
+# plt.grid()
 
-        # # Figure 4: Sprung Mass Acceleration
-        # plt.figure(4)
-        # plt.plot(t, dps / ms, label="Acceleration")
-        # plt.grid()
-        # #plt.ylim([-19, 19])
-        # plt.ylabel("Acceleration [m/s^2]")
+# plt.twinx()
+# plt.plot(t, Y, label="Road", color="k")
+# plt.ylabel("Road Input [m]")
+# #plt.ylim([0, 0.15])
 
-        # plt.twinx()
-        # plt.plot(t, Y, label="Road", color="k")
-        # plt.ylabel("Road Input [m]")
-        # #plt.ylim([-0.15, 0.15])
+# plt.title("Tire Force")
+# plt.xlabel("Time [s]")
+# plt.legend()
+# plt.show()
 
-        # plt.title("Acceleration of the Sprung Mass")
-        # plt.xlabel("Time [s]")
-        # plt.legend()
-        # plt.show()
+# # Figure 4: Sprung Mass Acceleration
+# plt.figure(4)
+# plt.plot(t, dps / ms, label="Acceleration")
+# plt.grid()
+# #plt.ylim([-19, 19])
+# plt.ylabel("Acceleration [m/s^2]")
 
-        # # Figure 5: Spring Force vs Deflection
-        # plt.figure(5)
-        # plt.plot(qs, Fss)
-        # plt.grid()
-        # plt.title("Spring Force")
-        # plt.xlabel("Suspension Deflection [m]")
-        # plt.ylabel("Spring Force [N]")
-        # plt.show()
+# plt.twinx()
+# plt.plot(t, Y, label="Road", color="k")
+# plt.ylabel("Road Input [m]")
+# #plt.ylim([-0.15, 0.15])
+
+# plt.title("Acceleration of the Sprung Mass")
+# plt.xlabel("Time [s]")
+# plt.legend()
+# plt.show()
+
+# # Figure 5: Spring Force vs Deflection
+# plt.figure(5)
+# plt.plot(qs, Fss)
+# plt.grid()
+# plt.title("Spring Force")
+# plt.xlabel("Suspension Deflection [m]")
+# plt.ylabel("Spring Force [N]")
+# plt.show()
