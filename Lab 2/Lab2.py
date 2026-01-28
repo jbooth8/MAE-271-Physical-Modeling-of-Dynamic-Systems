@@ -34,56 +34,37 @@ params["amplitude"] = 0.1
 params["frequency"] = 20*2*np.pi
 params["theta"] = np.deg2rad(10)
 func, func_wrap, initial = get_func(params)
-output1 = solve_ivp(func_wrap, t_span, initial, t_eval=t_eval, method='RK45')#, rtol=rtol, atol=atol)
-params["theta"] = np.deg2rad(-10)
-func, func_wrap, initial = get_func(params)
-output2 = solve_ivp(func_wrap, t_span, initial, t_eval=t_eval, method='RK45')#, rtol=rtol, atol=atol)
+output = solve_ivp(func_wrap, t_span, initial, t_eval=t_eval, method='RK45')#, rtol=rtol, atol=atol)
 
-ts = output1.t
-ys1 = output1.y
-ys2 = output2.y
+ts = output.t
+ys = output.y
 
-states1: list[dict[str, float]] = []
-states2: list[dict[str, float]] = []
-for t, y1, y2 in zip(ts, ys1.T, ys2.T):
-    d_state, state1 = func(t, y1)
-    d_state, state2 = func(t, y2)
-    states1.append(state1)
-    states2.append(state2)
+states: list[dict[str, float]] = []
+for t, y in zip(ts, ys.T):
+    d_state, state = func(t, y)
+    states.append(state)
 
-df1 = pd.DataFrame(states1)
-df2 = pd.DataFrame(states2)
+df = pd.DataFrame(states)
 
-t_vals1 = df1.get("t").to_numpy()
-X_vals1 = df1.get("X").to_numpy()
-Y_vals1 = df1.get("Y").to_numpy()
-x_vals1 = df1.get("x").to_numpy()
-y_vals1 = df1.get("y").to_numpy()
-px_vals1 = df1.get("px").to_numpy()
-py_vals1 = df1.get("py").to_numpy()
-d_px_vals1 = df1.get("d_px").to_numpy()
-d_py_vals1 = df1.get("d_py").to_numpy()
-theta_vals1 = df1.get("theta").to_numpy()
-tan_theta_vals1 = df1.get("tan_theta").to_numpy()
-t_vals2 = df2.get("t").to_numpy()
-X_vals2 = df2.get("X").to_numpy()
-Y_vals2 = df2.get("Y").to_numpy()
-x_vals2 = df2.get("x").to_numpy()
-y_vals2 = df2.get("y").to_numpy()
-px_vals2 = df2.get("px").to_numpy()
-py_vals2 = df2.get("py").to_numpy()
-d_px_vals2 = df2.get("d_px").to_numpy()
-d_py_vals2 = df2.get("d_py").to_numpy()
-theta_vals2 = df2.get("theta").to_numpy()
-tan_theta_vals2 = df2.get("tan_theta").to_numpy()
+t_vals = df.get("t").to_numpy()
+X_vals = df.get("X").to_numpy()
+Y_vals = df.get("Y").to_numpy()
+x_vals = df.get("x").to_numpy()
+y_vals = df.get("y").to_numpy()
+px_vals = df.get("px").to_numpy()
+py_vals = df.get("py").to_numpy()
+d_px_vals = df.get("d_px").to_numpy()
+d_py_vals = df.get("d_py").to_numpy()
+theta_vals = df.get("theta").to_numpy()
+tan_theta_vals = df.get("tan_theta").to_numpy()
 
-num_frames = len(t_vals1)
+num_frames = len(t_vals)
 theta_fig = plt.figure()
 theta_ax = theta_fig.add_subplot()
-theta_ax.plot(ts, x_vals1, label="x")
-theta_ax.plot(ts, y_vals1, label="y")
-theta_ax.plot(ts, d_px_vals1, label="d_px")
-theta_ax.plot(ts, theta_vals1, label="theta")
+theta_ax.plot(ts, x_vals, label="x")
+theta_ax.plot(ts, y_vals, label="y")
+theta_ax.plot(ts, d_px_vals, label="d_px")
+theta_ax.plot(ts, theta_vals, label="theta")
 # theta_ax.plot(ts, tan_theta_vals, label="tan_theta")
 plt.legend()
 
@@ -91,15 +72,11 @@ fig = plt.figure()
 ax = fig.add_subplot()
 
 cart, = ax.plot([], [], 'o', c='k', label="cart")
-line1, = ax.plot([], [], '-', c='r')
-pend1, = ax.plot([], [], 'o', c='b', label="pendulum")
-line2, = ax.plot([], [], '-', c='r')
-pend2, = ax.plot([], [], 'o', c='b', label="pendulum")
+line, = ax.plot([], [], '-', c='r')
+pend, = ax.plot([], [], 'o', c='b', label="pendulum")
 
 def update_points(n):
     cart.set_data(([X_vals[n]], [Y_vals[n]]))
-    line1.set_data(([X_vals[n], x_vals[n]], [Y_vals[n], y_vals[n]]))
-    pend1.set_data(([x_vals[n]], [y_vals[n]]))
     line.set_data(([X_vals[n], x_vals[n]], [Y_vals[n], y_vals[n]]))
     pend.set_data(([x_vals[n]], [y_vals[n]]))
     return cart, line, pend
