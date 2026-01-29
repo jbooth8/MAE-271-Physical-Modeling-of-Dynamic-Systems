@@ -8,11 +8,11 @@ def get_func(params: dict[str, float]):
 
     # Extract parameters from dict
     theta = params["theta"]
-    ampl: float = params["amplitude"]
-    freq: float = params["frequency"]
-    leng: float = params["l_arm"]
-    mass: float = params["m_mass"]
-    g: float = params["g"]
+    ampl = params["amplitude"]
+    freq = params["frequency"]
+    leng = params["l_arm"]
+    mass = params["m_mass"]
+    g = params["g"]
 
     # Get initial condition (add position into the system so solve_ivp can integrate it for us)
     px = 0
@@ -31,7 +31,7 @@ def get_func(params: dict[str, float]):
         tan_theta = np.tan(theta)
 
         # Position of cart and its derivatives
-        X = np.zeros_like(t)
+        X = 0
         Y = ampl*np.sin(freq*t)
         d_Y = ampl*freq*np.cos(freq*t)
         dd_Y = -(freq**2)*Y
