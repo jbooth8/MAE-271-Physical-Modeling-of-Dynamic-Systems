@@ -44,9 +44,8 @@ params["frequency"] = 10
 params["theta"] = np.deg2rad(40)
 solutions.append(solve_problem(params, t_eval, "40°"))
 
-# ani = plot_ani(solutions, interval = 10)
-
-# plt.axis('equal')
+ani = plot_ani(solutions, interval = 10)
+plt.axis('equal')
 
 fig = plot_time(solutions)
 

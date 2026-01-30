@@ -31,6 +31,9 @@ def plot_time(solutions):
         ax.plot(t_vals, theta_vals, label=f"theta: {name}")
         # theta_ax.plot(ts, tan_theta_vals, label="tan_theta")
     plt.legend()
+    plt.title("Theta vs. Time")
+    plt.xlabel("time (s)")
+    plt.ylabel("theta (deg)")
     return fig
 
 
@@ -91,5 +94,7 @@ def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
     plt.xlim(min_x - 0.5, max_x + 0.5)
     plt.ylim(min_y - 0.5, max_y + 0.5)
     plt.legend()
-
+    plt.title("Pendulum Animation")
+    plt.xlabel("x (m)")
+    plt.ylabel("y (m)")
     return ani
