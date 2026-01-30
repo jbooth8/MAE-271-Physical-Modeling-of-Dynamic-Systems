@@ -33,7 +33,7 @@ params["frequency"] = 20*2*np.pi
 params["theta"] = np.deg2rad(10)
 solutions.append(solve_problem(params, t_eval))
 
-plot_ani(solutions)
+ani = plot_ani(solutions)
 
 # plt.axis('equal')
 
