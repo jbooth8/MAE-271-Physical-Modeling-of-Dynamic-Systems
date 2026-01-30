@@ -1,16 +1,17 @@
 from get_func import get_func
 from scipy.integrate import solve_ivp
 import pandas as pd
+import numpy as np
 
 
 def solve_problem(
         params: dict[str, float],
-        t_eval: list[float],
+        t_eval: np.ndarray,
         name: str,
         rtol: float = 1e-12,
         atol: float = 1e-12,
     ):
-    
+
     func, func_wrap, initial = get_func(params)
     output = solve_ivp(
         func_wrap,

@@ -1,15 +1,16 @@
 from copy import deepcopy
 import numpy as np
 
+
 def get_func(params: dict[str, float]):
-    # Make a copy of the input parameters to ensure the returned function 
+    # Make a copy of the input parameters to ensure the returned function
     # does not change when the original parameters dictionary changes
     params = deepcopy(params)
 
     # Extract parameters from dict
     theta = params["theta"]
     ampl = params["amplitude"]
-    freq = params["frequency"]
+    freq = params["frequency"] * 2 * np.pi  # Convert from Hz to rad/s
     leng = params["l_arm"]
     mass = params["m_mass"]
     g = params["g"]
@@ -32,20 +33,26 @@ def get_func(params: dict[str, float]):
 
         # Position of cart and its derivatives
         X = 0
-        Y = ampl*np.sin(freq*t)
-        d_Y = ampl*freq*np.cos(freq*t)
-        dd_Y = -(freq**2)*Y
+        Y = ampl * np.sin(freq * t)
+        d_Y = ampl * freq * np.cos(freq * t)
+        dd_Y = -(freq**2) * Y
 
         # State derivatives
-        d_theta = px/(leng*cos_theta*mass)
-        d_px = mass*g*sin_theta*cos_theta + mass*dd_Y*sin_theta*cos_theta - tan_theta*d_theta*px
+        d_theta = px / (leng * cos_theta * mass)
+        d_px = (
+            mass * g * sin_theta * cos_theta
+            + mass * dd_Y * sin_theta * cos_theta
+            - tan_theta * d_theta * px
+        )
 
         # Other state variables
-        x = X + leng*np.sin(theta) # x-position of pendulum mass
-        y = Y + leng*np.cos(theta) # y-position of pendulum mass
-        py = mass*(d_Y - tan_theta*px/mass) # y-momentum of pendulum mass
-        d_py = mass*(dd_Y - tan_theta*d_px/mass - px*d_theta/(mass*cos_theta**2)) # first time-derivative of y-momentum of pendulum mass
-        
+        x = X + leng * np.sin(theta)  # x-position of pendulum mass
+        y = Y + leng * np.cos(theta)  # y-position of pendulum mass
+        py = mass * (d_Y - tan_theta * px / mass)  # y-momentum of pendulum mass
+        d_py = mass * (
+            dd_Y - tan_theta * d_px / mass - px * d_theta / (mass * cos_theta**2)
+        )  # first time-derivative of y-momentum of pendulum mass
+
         # Concatenate state derivatives
         d_state = [d_px, d_theta]
 
@@ -69,11 +76,11 @@ def get_func(params: dict[str, float]):
         return d_state, state
 
     def func_wrap(t, state):
-        '''
+        """
         Since solve_ivp() needs a function that only returns the state
         derivatives, we create a wrapper for func() that discards the rest of
         the state and returns only the state derivatives
-        '''
+        """
         d_state, state = func(t, state)
         return d_state
 

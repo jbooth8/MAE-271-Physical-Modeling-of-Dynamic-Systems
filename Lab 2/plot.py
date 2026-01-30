@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Any
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
@@ -6,9 +5,12 @@ from matplotlib import animation
 import numpy as np
 import pandas as pd
 
+
 def plot_time(solutions):
+    fig = plt.figure()
+    ax = fig.add_subplot()
     for solution in solutions:
-        params = solution["params"]
+        name = solution["name"]
         df = solution["data"]
 
         t_vals = df.get("t").to_numpy()
@@ -20,17 +22,17 @@ def plot_time(solutions):
         py_vals = df.get("py").to_numpy()
         d_px_vals = df.get("d_px").to_numpy()
         d_py_vals = df.get("d_py").to_numpy()
-        theta_vals = df.get("theta").to_numpy()
+        theta_vals = df.get("theta").to_numpy() * 180 / np.pi
         tan_theta_vals = df.get("tan_theta").to_numpy()
 
-        theta_fig = plt.figure()
-        theta_ax = theta_fig.add_subplot()
-        theta_ax.plot(t_vals, x_vals, label=f"{params}: x")
-        theta_ax.plot(t_vals, y_vals, label=f"{params}: y")
-        theta_ax.plot(t_vals, d_px_vals, label=f"{params}: d_px")
-        theta_ax.plot(t_vals, theta_vals, label=f"{params}: theta")
+        # ax.plot(t_vals, x_vals, label=f"{name}: x")
+        # ax.plot(t_vals, y_vals, label=f"{name}: y")
+        # ax.plot(t_vals, d_px_vals, label=f"{name}: d_px")
+        ax.plot(t_vals, theta_vals, label=f"theta: {name}")
         # theta_ax.plot(ts, tan_theta_vals, label="tan_theta")
     plt.legend()
+    return fig
+
 
 def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
     fig = plt.figure()
@@ -53,9 +55,9 @@ def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
         data[i]["x_vals"] = df.get("x").to_numpy()
         data[i]["y_vals"] = df.get("y").to_numpy()
 
-        plots[i]["cart"], = ax.plot([], [], 'o', c='b', label=f"cart: {name}")
-        plots[i]["line"], = ax.plot([], [], '-', c='k')
-        plots[i]["pend"], = ax.plot([], [], 'o', c='r', label=f"pendulum: {name}")
+        (plots[i]["cart"],) = ax.plot([], [], "o", c="b", label=f"cart: {name}")
+        (plots[i]["line"],) = ax.plot([], [], "-", c="k")
+        (plots[i]["pend"],) = ax.plot([], [], "o", label=f"pendulum: {name}")
 
         num_frames = len(data[i]["t_vals"])
 
@@ -65,25 +67,29 @@ def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
     def update_points(n):
         returns = []
         for i in range(num_solutions):
-            plots[i]["cart"].set_data(([data[i]["X_vals"][n]],
-                                       [data[i]["Y_vals"][n]]))
-            
-            plots[i]["line"].set_data(([data[i]["X_vals"][n], data[i]["x_vals"][n]],
-                                       [data[i]["Y_vals"][n], data[i]["y_vals"][n]]))
+            plots[i]["cart"].set_data(([data[i]["X_vals"][n]], [data[i]["Y_vals"][n]]))
 
-            plots[i]["pend"].set_data(([data[i]["x_vals"][n]],
-                                       [data[i]["y_vals"][n]]))
+            plots[i]["line"].set_data(
+                (
+                    [data[i]["X_vals"][n], data[i]["x_vals"][n]],
+                    [data[i]["Y_vals"][n], data[i]["y_vals"][n]],
+                )
+            )
+
+            plots[i]["pend"].set_data(([data[i]["x_vals"][n]], [data[i]["y_vals"][n]]))
             returns.extend([plots[i]["cart"], plots[i]["line"], plots[i]["pend"]])
 
         returns = tuple(returns)
-        return *returns,
+        return (*returns,)
 
-    ani = animation.FuncAnimation(fig, update_points, num_frames, interval=10, blit=True, repeat=True)
+    ani = animation.FuncAnimation(
+        fig, update_points, num_frames, interval=interval, blit=True, repeat=True
+    )
 
     min_x, max_x = min(all_x), max(all_x)
     min_y, max_y = min(all_y), max(all_y)
-    plt.xlim(min_x-0.5, max_x+0.5)
-    plt.ylim(min_y-0.5, max_y+0.5)
+    plt.xlim(min_x - 0.5, max_x + 0.5)
+    plt.ylim(min_y - 0.5, max_y + 0.5)
     plt.legend()
 
     return ani
