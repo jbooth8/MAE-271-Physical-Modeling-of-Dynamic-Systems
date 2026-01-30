@@ -20,10 +20,10 @@ t_increment: float = 0.005 # visualization time step duration (sec)
 t_span = (t_start, t_end)
 t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
 
-num_frequencies = 4
-num_amplitudes = 4
-frequencies = np.linspace(0.01, 1, num_frequencies)
-amplitudes = np.linspace(0.01, 10, num_amplitudes)
+num_frequencies = 10
+num_amplitudes = 10
+frequencies = np.linspace(15, 25, num_frequencies)
+amplitudes = np.linspace(4, 5, num_amplitudes)
 
 F, A = np.meshgrid(frequencies, amplitudes)
 T = np.zeros_like(A)
