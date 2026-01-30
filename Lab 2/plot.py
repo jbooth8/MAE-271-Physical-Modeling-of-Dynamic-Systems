@@ -1,4 +1,6 @@
+from copy import deepcopy
 from typing import Any
+from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
@@ -30,43 +32,48 @@ def plot_time(solutions):
         # theta_ax.plot(ts, tan_theta_vals, label="tan_theta")
     plt.legend()
 
-def plot_ani(solutions: list[dict[str, Any]]):
-    update_funcs = []
+def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
     fig = plt.figure()
     ax = fig.add_subplot()
     all_x = np.array([])
     all_y = np.array([])
 
-    for solution in solutions:
-        params: dict[str, float] = solution["params"]
+    # Initialize arrays to store the animation plots and data to use to update them
+    num_solutions = len(solutions)
+    plots: list[dict[str, Line2D]] = [{} for n in range(num_solutions)]
+    data: list[dict[str, np.ndarray]] = [{} for n in range(num_solutions)]
+
+    for i, solution in enumerate(solutions):
+        name: str = solution["name"]
         df: pd.DataFrame = solution["data"]
 
-        t_vals = df.get("t").to_numpy()
-        X_vals = df.get("X").to_numpy()
-        Y_vals = df.get("Y").to_numpy()
-        x_vals = df.get("x").to_numpy()
-        y_vals = df.get("y").to_numpy()
-        num_frames = len(t_vals)
+        data[i]["t_vals"] = df.get("t").to_numpy()
+        data[i]["X_vals"] = df.get("X").to_numpy()
+        data[i]["Y_vals"] = df.get("Y").to_numpy()
+        data[i]["x_vals"] = df.get("x").to_numpy()
+        data[i]["y_vals"] = df.get("y").to_numpy()
 
-        cart, = ax.plot([], [], 'o', c='b', label="cart")
-        line, = ax.plot([], [], '-', c='k')
-        pend, = ax.plot([], [], 'o', c='r', label="pendulum")
+        plots[i]["cart"], = ax.plot([], [], 'o', c='b', label=f"cart: {name}")
+        plots[i]["line"], = ax.plot([], [], '-', c='k')
+        plots[i]["pend"], = ax.plot([], [], 'o', c='r', label=f"pendulum: {name}")
 
-        def update(n):
-            cart.set_data(([X_vals[n]], [Y_vals[n]]))
-            line.set_data(([X_vals[n], x_vals[n]], [Y_vals[n], y_vals[n]]))
-            pend.set_data(([x_vals[n]], [y_vals[n]]))
-            return [cart, line, pend]
+        num_frames = len(data[i]["t_vals"])
 
-        update_funcs.append(update)
-        all_x = np.concatenate((all_x, X_vals.copy(), x_vals.copy()))
-        all_y = np.concatenate((all_y, Y_vals.copy(), y_vals.copy()))
+        all_x = np.concatenate((all_x, data[i]["X_vals"].copy(), data[i]["x_vals"].copy()))
+        all_y = np.concatenate((all_y, data[i]["Y_vals"].copy(), data[i]["y_vals"].copy()))
 
     def update_points(n):
         returns = []
-        for func in update_funcs:
-            plots = func(n)
-            returns.extend(plots)
+        for i in range(num_solutions):
+            plots[i]["cart"].set_data(([data[i]["X_vals"][n]],
+                                       [data[i]["Y_vals"][n]]))
+            
+            plots[i]["line"].set_data(([data[i]["X_vals"][n], data[i]["x_vals"][n]],
+                                       [data[i]["Y_vals"][n], data[i]["y_vals"][n]]))
+
+            plots[i]["pend"].set_data(([data[i]["x_vals"][n]],
+                                       [data[i]["y_vals"][n]]))
+            returns.extend([plots[i]["cart"], plots[i]["line"], plots[i]["pend"]])
 
         returns = tuple(returns)
         return *returns,

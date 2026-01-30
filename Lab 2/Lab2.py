@@ -19,7 +19,7 @@ params["frequency"] = 0 # oscillator frequency [Hz]
 # Time
 t_start: float = 0
 t_end: float = 10
-t_increment: float = 0.001
+t_increment: float = 0.010
 
 t_span = (t_start, t_end)
 t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
@@ -31,9 +31,21 @@ solutions = []
 params["amplitude"] = 0.1
 params["frequency"] = 20*2*np.pi
 params["theta"] = np.deg2rad(10)
-solutions.append(solve_problem(params, t_eval))
+solutions.append(solve_problem(params, t_eval, "10°"))
+params["amplitude"] = 0.1
+params["frequency"] = 20*2*np.pi
+params["theta"] = np.deg2rad(20)
+solutions.append(solve_problem(params, t_eval, "20°"))
+params["amplitude"] = 0.1
+params["frequency"] = 20*2*np.pi
+params["theta"] = np.deg2rad(30)
+solutions.append(solve_problem(params, t_eval, "30°"))
+params["amplitude"] = 0
+params["frequency"] = 20*2*np.pi
+params["theta"] = np.deg2rad(40)
+solutions.append(solve_problem(params, t_eval, "40°"))
 
-ani = plot_ani(solutions)
+ani = plot_ani(solutions, interval = 10)
 
 # plt.axis('equal')
 
