@@ -45,8 +45,8 @@ def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
 
     # Initialize arrays to store the animation plots and data to use to update them
     num_solutions = len(solutions)
-    plots: list[dict[str, Line2D]] = [{} for n in range(num_solutions)]
-    data: list[dict[str, np.ndarray]] = [{} for n in range(num_solutions)]
+    plots: list[dict[str, Line2D]] = [{} for _ in range(num_solutions)]
+    data: list[dict[str, np.ndarray]] = [{} for _ in range(num_solutions)]
 
     for i, solution in enumerate(solutions):
         name: str = solution["name"]
@@ -55,32 +55,33 @@ def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
         data[i]["t_vals"] = df.get("t").to_numpy()
         data[i]["X_vals"] = df.get("X").to_numpy()
         data[i]["Y_vals"] = df.get("Y").to_numpy()
-        data[i]["x_vals"] = df.get("x").to_numpy()
-        data[i]["y_vals"] = df.get("y").to_numpy()
+        data[i]["y_us_vals"] = df.get("q_t").to_numpy()
+        data[i]["y_s_vals"] = df.get("q_s").to_numpy() + data[i]["y_us_vals"]
+        data[i]["y_a_vals"] = df.get("q_a").to_numpy() + data[i]["y_s_vals"]
 
-        (plots[i]["cart"],) = ax.plot([], [], "o", c="b", label=f"cart: {name}")
-        (plots[i]["line"],) = ax.plot([], [], "-", c="k")
-        (plots[i]["pend"],) = ax.plot([], [], "o", label=f"pendulum: {name}")
+        if i == 0:
+            road = ax.plot(data[i]["X_vals"], data[i]["Y_vals"], "-", c="k", label="road")
+
+        (plots[i]["unsprung"],) = ax.plot([], [], "o", label=f"unsprung: {name}")
+        (plots[i]["sprung"],) = ax.plot([], [], "o", label=f"sprung: {name}")
+        (plots[i]["actuator"],) = ax.plot([], [], "o", label=f"actuator: {name}")
 
         num_frames = len(data[i]["t_vals"])
 
-        all_x = np.concatenate((all_x, data[i]["X_vals"].copy(), data[i]["x_vals"].copy()))
-        all_y = np.concatenate((all_y, data[i]["Y_vals"].copy(), data[i]["y_vals"].copy()))
+        all_x = np.concatenate((all_x, data[i]["X_vals"].copy()))
+        all_y = np.concatenate((all_y, data[i]["Y_vals"].copy(),
+                                              data[i]["y_us_vals"].copy(),
+                                              data[i]["y_s_vals"].copy(),
+                                              data[i]["y_a_vals"].copy()
+                                              ))
 
     def update_points(n):
         returns = []
         for i in range(num_solutions):
-            plots[i]["cart"].set_data(([data[i]["X_vals"][n]], [data[i]["Y_vals"][n]]))
-
-            plots[i]["line"].set_data(
-                (
-                    [data[i]["X_vals"][n], data[i]["x_vals"][n]],
-                    [data[i]["Y_vals"][n], data[i]["y_vals"][n]],
-                )
-            )
-
-            plots[i]["pend"].set_data(([data[i]["x_vals"][n]], [data[i]["y_vals"][n]]))
-            returns.extend([plots[i]["cart"], plots[i]["line"], plots[i]["pend"]])
+            plots[i]["unsprung"].set_data(([data[i]["X_vals"][n]], [data[i]["y_us_vals"][n]]))
+            plots[i]["sprung"].set_data(([data[i]["X_vals"][n]], [data[i]["y_s_vals"][n]]))
+            plots[i]["actuator"].set_data(([data[i]["X_vals"][n]], [data[i]["y_a_vals"][n]]))
+            returns.extend([plots[i]["unsprung"], plots[i]["sprung"], plots[i]["actuator"]])
 
         returns = tuple(returns)
         return (*returns,)

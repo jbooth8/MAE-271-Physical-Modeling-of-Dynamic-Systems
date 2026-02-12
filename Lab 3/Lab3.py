@@ -46,15 +46,15 @@ t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
 
 
 # Run simulations
-solutions = []
-solutions.append(solve_problem(params, t_eval, "base"))
+solutions: list[str, dict[str, float]] = []
+solutions.append(solve_problem(params, t_eval, "baseline"))
 
-# ani = plot_ani(solutions, interval = 10)
-# plt.axis('equal')
+ani = plot_ani(solutions, interval = 10)
+plt.axis('equal')
 
 # fig = plot_time(solutions)
 
 # from IPython.display import HTML
 # HTML(ani.to_jshtml())
 
-# plt.show()
+plt.show()

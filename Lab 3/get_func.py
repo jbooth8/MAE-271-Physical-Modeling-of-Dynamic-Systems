@@ -1,9 +1,12 @@
 from copy import deepcopy
-from typing import Any
 import numpy as np
+import scipy
 
 
 def get_func(params: dict[str, float]):
+    '''
+    Generate state derivative calculator functions for current simulation.
+    '''
     # Make a copy of the input parameters to ensure the returned function
     # does not change when the original parameters dictionary changes
     params = deepcopy(params)
@@ -18,27 +21,37 @@ def get_func(params: dict[str, float]):
     m_us = m_tot / (1 + msmus)  # Unsprung mass (kg)
     m_s = m_tot - m_us          # Sprung mass (kg)
     m_a = 0.02 * m_s            # Actuator mass (kg)
-    
+    params["m_us"] = m_us
+    params["m_s"] = m_s
+    params["m_a"] = m_a
+
     # Passive Stiffness
     w_s = params["w_s"]     # Suspension natural frequency (rad/s)
     k_s = m_s * w_s**2      # Suspension stiffness (N/m)
+    params["k_s"] = k_s
     w_wh = params["w_wh"]   # Tire wheel hop frequency (rad/s)
     k_t = m_us * w_wh**2    # Tire stiffness (N/m)
+    params["k_t"] = k_t
 
     # Passive Damping
     zeta_s = params["zeta_s"]       # Passive damping ratio
     b_s = 2 * zeta_s * w_s * m_s    # Suspension damping (N·s/m)
+    params["b_s"] = b_s
 
     # Actuator - Passive
     w_a = 2 * np.pi * 5         # Actuator frequency (rad/s)
     k_a = m_a * w_a**2          # Actuator stiffness (N/m)
     b_a = 2 * 0.1 * w_a * m_a   # Actuator damping (N·s/m)
+    params["w_a"] = w_a
+    params["k_a"] = k_a
+    params["b_a"] = b_a
 
     # Actuator - Active
     zeta_c = params["zeta_c"]       # Active damping ratio
     T_c = params["T_c"]             # Voice coil coupling constant (N/A)
     R_c = params["R_c"]             # Voice coil winding resistance (Ohms)
     b_c = 2 * zeta_c * w_s * m_s    # Voice coil damping (N·s/m)
+    params["b_c"] = b_c
 
     # Road
     road_delta_x = params["road_delta_x"]       # Distance between randomly generated road heights (m)
@@ -60,9 +73,23 @@ def get_func(params: dict[str, float]):
         (m_a + m_s + m_us) * g / k_t,   # Tire displacement
         ]
 
-    # Create derivative calculator function to be used by solve_ivp()
-    # state = [px, theta]
     def func(t: float, state: list[float]):
+        '''
+        Calculate state derivative from current state.
+
+        Parameters:
+            t (float): Current time of simulation.
+            state (list[float]): Current state of simulation.
+
+        Returns:
+            d_state (list[float]): Current state derivative.
+            state_ext (dict[str, float]): Extended state information.
+        '''
+        # Create current extended state dict
+        s: dict[str, float] = params.copy()
+        s["t"] = t
+        
+        # Make a copy of state variables in case they get changed
         state = deepcopy(state)
         p_a = state[0]  # Actuator mass momentum
         p_s = state[1]  # Sprung mass momentum
@@ -70,52 +97,84 @@ def get_func(params: dict[str, float]):
         q_a = state[3]  # Actuator displacement
         q_s = state[4]  # Suspension displacement
         q_t = state[5]  # Tire displacement
+        s["p_a"] = p_a
+        s["p_s"] = p_s
+        s["p_us"] = p_us
+        s["q_a"] = q_a
+        s["q_s"] = q_s
+        s["q_t"] = q_t
 
         # Position of road and its derivatives
         slope_interp = deepcopy(slope_interpolator)
         X = U * t   # vehicle velocity x time
-        Y = np.zeros_like(X, dtype=float)
+        Y = np.zeros_like(X)
         dYdX = slope_interp(X)
+        s["X"] = X
+        s["Y"] = Y
+        s["dYdX"] = dYdX
 
         # Velocities
         v_a = p_a / m_a     # Actuator mass velocity
         v_s = p_s / m_s     # Sprung mass velocity
         v_us = p_us / m_us  # Unsprung mass velocity
         v_in = U * dYdX            # Tire input velocity
+        s["v_a"] = v_a
+        s["v_s"] = v_s
+        s["v_us"] = v_us
+        s["v_in"] = v_in
 
-        # Voice coil current
+        # Voice Coil Current
         i_c = b_c * v_s / T_c   # Voice coil input current (A)
         e_c = R_c * i_c         # Voice coil input voltage (V)
         P_c = i_c * e_c         # Voice coil power (W)
-        
-        # Forces
+        s["i_c"] = i_c
+        s["e_c"] = e_c
+        s["P_c"] = P_c
+
+        # Gravitational Force
         F_g_a = -m_a * g    # Actuator mass gravitational force
         F_g_s = -m_s * g    # Sprung mass gravitational force
         F_g_us = -m_us * g  # Unsprung mass gravitational force
+        s["F_g_a"] = F_g_a
+        s["F_g_s"] = F_g_s
+        s["F_g_us"] = F_g_us
 
+        # Actuator Force
         F_b_a = b_a * (v_s - v_a)   # Actuator damping force
         F_s_a = k_a * q_a           # Actuator spring force
         F_vc = T_c * i_c            # Voice coil force
         F_a = F_b_a + F_s_a + F_vc  # Total actuator force
+        s["F_b_a"] = F_b_a
+        s["F_s_a"] = F_s_a
+        s["F_vc"] = F_vc
+        s["F_a"] = F_a
         
+        # Suspension Force
         F_b_s = b_s * (v_us - v_s)  # Suspension damping force
         F_s_s = k_s * q_s           # Suspension spring force
         F_s = F_b_s + F_s_s         # Total suspension force
+        s["F_b_s"] = F_b_s
+        s["F_s_s"] = F_s_s
+        s["F_s"] = F_s
         
-        # Tire force
-        if q_t <= 0:
-            F_t = 0
-        else:
-            F_t = k_t * q_t
+        # Tire Force
+        F_t = k_t * q_t if q_t > 0 else 0   # Prevent tire sticking the ground
+        s["F_t"] = F_t
 
-        # State derivatives
+        # State Derivatives
         d_p_a = F_g_a + F_a
         d_p_s = F_g_s + F_s - F_a
         d_p_us = F_g_us + F_t - F_s
         d_q_a = v_s - v_a
         d_q_s = v_us - v_s
         d_q_t = v_in - v_us
-        
+        s["d_p_a"] = d_p_a
+        s["d_p_s"] = d_p_s
+        s["d_p_us"] = d_p_us
+        s["d_q_a"] = d_q_a
+        s["d_q_s"] = d_q_s
+        s["d_q_t"] = d_q_t
+
         # Concatenate state derivatives
         d_state: list[float] = [
             d_p_a,
@@ -126,13 +185,7 @@ def get_func(params: dict[str, float]):
             d_q_t, # Don't worry, this is a float, not an NDArray
             ]
 
-        # Create current state dict
-        state_ext: dict[str, float] = {}
-        state_ext["t"] = t
-        state_ext["X"] = X
-        state_ext["Y"] = Y # Don't worry, this is a float, not an NDArray
-
-        return d_state, state_ext
+        return d_state, s
 
     def func_wrap(t: float, state: list[float]):
         """
