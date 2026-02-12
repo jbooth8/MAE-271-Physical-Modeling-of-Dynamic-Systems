@@ -47,10 +47,13 @@ t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
 
 # Run simulations
 solutions: list[str, dict[str, float]] = []
+params["zeta_c"] = 0
 solutions.append(solve_problem(params, t_eval, "baseline"))
+# params["zeta_c"] = 0.7
+# solutions.append(solve_problem(params, t_eval, "zeta_c=0.7"))
 
 ani = plot_ani(solutions, interval = 10)
-plt.axis('equal')
+# plt.axis('equal')
 
 # fig = plot_time(solutions)
 
