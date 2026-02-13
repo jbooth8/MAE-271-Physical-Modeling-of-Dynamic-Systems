@@ -1,6 +1,5 @@
 from copy import deepcopy
 import numpy as np
-import scipy
 
 
 def get_func(params: dict[str, float]):
@@ -18,9 +17,10 @@ def get_func(params: dict[str, float]):
     # Masses
     m_tot = params["m_tot"]     # Actuated mass (kg)
     msmus = params["msmus"]     # Sprung to unsprung mass ratio
+    mams = params["mams"]       # Actuator to sprung mass ratio
     m_us = m_tot / (1 + msmus)  # Unsprung mass (kg)
     m_s = m_tot - m_us          # Sprung mass (kg)
-    m_a = 0.02 * m_s            # Actuator mass (kg)
+    m_a = mams * m_s            # Actuator mass (kg)
     params["m_us"] = m_us
     params["m_s"] = m_s
     params["m_a"] = m_a
@@ -39,7 +39,7 @@ def get_func(params: dict[str, float]):
     params["b_s"] = b_s
 
     # Actuator - Passive
-    w_a = 2 * np.pi * 5         # Actuator frequency (rad/s)
+    w_a = params["w_a"]         # Actuator frequency (rad/s)
     k_a = m_a * w_a**2          # Actuator stiffness (N/m)
     b_a = 2 * 0.1 * w_a * m_a   # Actuator damping (N·s/m)
     params["w_a"] = w_a
@@ -174,6 +174,11 @@ def get_func(params: dict[str, float]):
         s["d_q_a"] = d_q_a
         s["d_q_s"] = d_q_s
         s["d_q_t"] = d_q_t
+
+        # Acceleration
+        s["a_a"] = d_p_a / m_a
+        s["a_s"] = d_p_s / m_s
+        s["a_us"] = d_p_us / m_us
 
         # Concatenate state derivatives
         d_state: list[float] = [

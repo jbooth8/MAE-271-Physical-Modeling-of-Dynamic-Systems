@@ -7,8 +7,10 @@ import pandas as pd
 
 
 def plot_time(solutions):
-    fig = plt.figure()
-    ax = fig.add_subplot()
+    fig_acc = plt.figure()
+    fig_pow = plt.figure()
+    acc = fig_acc.add_subplot()
+    pow = fig_pow.add_subplot()
     for solution in solutions:
         name = solution["name"]
         df = solution["data"]
@@ -16,25 +18,24 @@ def plot_time(solutions):
         t_vals = df.get("t").to_numpy()
         X_vals = df.get("X").to_numpy()
         Y_vals = df.get("Y").to_numpy()
-        x_vals = df.get("x").to_numpy()
-        y_vals = df.get("y").to_numpy()
-        px_vals = df.get("px").to_numpy()
-        py_vals = df.get("py").to_numpy()
-        d_px_vals = df.get("d_px").to_numpy()
-        d_py_vals = df.get("d_py").to_numpy()
-        theta_vals = df.get("theta").to_numpy() * 180 / np.pi
-        tan_theta_vals = df.get("tan_theta").to_numpy()
+        a_s_vals = df.get("a_s").to_numpy()
+        P_c_vals = df.get("P_c").to_numpy()
+        dYdX_vals = df.get("dYdX").to_numpy()
 
-        # ax.plot(t_vals, x_vals, label=f"{name}: x")
-        # ax.plot(t_vals, y_vals, label=f"{name}: y")
-        # ax.plot(t_vals, d_px_vals, label=f"{name}: d_px")
-        ax.plot(t_vals, theta_vals, label=f"theta: {name}")
+        acc.plot(t_vals, a_s_vals, label=f"sprung mass acceleration: {name}")
+        pow.plot(t_vals, P_c_vals, label=f"actuator power: {name}")
+        acc.plot(t_vals, dYdX_vals, label=f"dYdX: {name}")
+        pow.plot(t_vals, dYdX_vals, label=f"dYdX: {name}")
         # theta_ax.plot(ts, tan_theta_vals, label="tan_theta")
-    plt.legend()
-    plt.title("Theta vs. Time")
-    plt.xlabel("time (s)")
-    plt.ylabel("theta (deg)")
-    return fig
+    acc.legend()
+    pow.legend()
+    acc.set_title("Acceleration vs. Time")
+    pow.set_title("Power vs. Time")
+    acc.set_xlabel("time (s)")
+    pow.set_xlabel("time (s)")
+    acc.set_ylabel("accleration (m/s^2)")
+    pow.set_ylabel("power (watts)")
+    return fig_acc, fig_pow
 
 
 def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
@@ -55,9 +56,9 @@ def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
         data[i]["t_vals"] = df.get("t").to_numpy()
         data[i]["X_vals"] = df.get("X").to_numpy()
         data[i]["Y_vals"] = df.get("Y").to_numpy()
-        data[i]["y_us_vals"] = df.get("q_t").to_numpy()
-        data[i]["y_s_vals"] = df.get("q_s").to_numpy() + data[i]["y_us_vals"]
-        data[i]["y_a_vals"] = df.get("q_a").to_numpy() + data[i]["y_s_vals"]
+        data[i]["y_us_vals"] = 12 - df.get("q_t").to_numpy()
+        data[i]["y_s_vals"] = 12 - df.get("q_s").to_numpy() + data[i]["y_us_vals"]
+        data[i]["y_a_vals"] = 6 - df.get("q_a").to_numpy() + data[i]["y_s_vals"]
 
         if i == 0:
             road = ax.plot(data[i]["X_vals"], data[i]["Y_vals"], "-", c="k", label="road")

@@ -15,18 +15,20 @@ params["g"] = 9.8  # gravity (m/s^2)
 # Mass
 params["m_tot"] = 3000.0 / 2.2  # Total vehicle mass (lbs -> kg)
 params["msmus"] = 5.0           # Sprung to unsprung mass ratio
+params["mams"] = 0.04          # Actuator to sprung mass ratio
 
 # Damping ratios
 params["zeta_s"] = 0.7  # Passive damping ratio
-params["zeta_c"] = 0.7  # Active damping ratio
+params["zeta_c"] = 1.7  # Active damping ratio
 
 # Suspension
+params["w_a"] = 2 * np.pi * 5   # Actuator natural frequency (rad/s)
 params["w_s"] = 2 * np.pi * 1.2 # Suspension natural frequency (Hz -> rad/s)
 params["w_wh"] = 2 * np.pi * 8  # Tire / wheel hop frequency (Hz -> rad/s)
 
 # Voice coil parameters
-params["R_c"] = 0.005   # Winding resistance (Ohm)
-params["T_c"] = 5.0     # Coupling constant (N/A)
+params["R_c"] = 0.005           # Winding resistance (Ohm)
+params["T_c"] = 1.0             # Coupling constant (N/A)
 
 # Vehicle velocity
 params["U"] = 40 * 0.46 # Vehicle speed (mph -> m/s)
@@ -49,10 +51,11 @@ t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
 solutions: list[str, dict[str, float]] = []
 params["zeta_c"] = 0
 solutions.append(solve_problem(params, t_eval, "baseline"))
-# params["zeta_c"] = 0.7
-# solutions.append(solve_problem(params, t_eval, "zeta_c=0.7"))
+params["zeta_c"] = 0.7
+solutions.append(solve_problem(params, t_eval, "zeta_c=0.7"))
 
-ani = plot_ani(solutions, interval = 10)
+# ani = plot_ani(solutions)
+fig = plot_time(solutions)
 # plt.axis('equal')
 
 # fig = plot_time(solutions)
