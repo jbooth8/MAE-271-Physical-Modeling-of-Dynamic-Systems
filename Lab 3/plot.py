@@ -70,11 +70,12 @@ def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
         num_frames = len(data[i]["t_vals"])
 
         all_x = np.concatenate((all_x, data[i]["X_vals"].copy()))
-        all_y = np.concatenate((all_y, data[i]["Y_vals"].copy(),
-                                              data[i]["y_us_vals"].copy(),
-                                              data[i]["y_s_vals"].copy(),
-                                              data[i]["y_a_vals"].copy()
-                                              ))
+        all_y = np.concatenate((
+            all_y, data[i]["Y_vals"].copy(),
+            data[i]["y_us_vals"].copy(),
+            data[i]["y_s_vals"].copy(),
+            data[i]["y_a_vals"].copy(),
+        ))
 
     def update_points(n):
         returns = []
