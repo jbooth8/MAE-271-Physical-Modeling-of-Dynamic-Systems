@@ -9,9 +9,6 @@ plt.rcParams["animation.html"] = "jshtml"
 # -----------------------------
 params: dict[str, float] = {}
 
-# Constants
-params["g"] = 9.8  # gravity (m/s^2)
-
 # Flywheel and piston rod
 params["m_fw"] = 10 / 2.2       # Flywheel mass (lbs -> kg)
 params["R"] = 4 * 0.0254        # Flywheel rod joint radius (in -> m)
@@ -27,6 +24,7 @@ params["V_st"] = params["A_p"] * 2 * params["R"]    # Volume displaced due to st
 params["V_TDC"] = 80 / 10**6                        # Volume remaining at top of stroke (cc -> m^3)
 params["V_0"] = params["V_st"] + params["V_TDC"]    # Volume at BDC (m^3)
 params["P_0"] = 1 * 10**5                           # Atmospheric pressure (atm -> Pa)
+params["gamma"] = 1.4                               # Specific heat ratio
 
 # Controller
 params["w_fw_des"] = 1500 / 60 * 2 * np.pi  # Desired flywheel rotational speed (RPM -> rad/s)
