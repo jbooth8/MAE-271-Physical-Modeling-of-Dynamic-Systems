@@ -1,4 +1,4 @@
-from get_func import get_func
+from state_func import get_func
 from scipy.integrate import solve_ivp
 import pandas as pd
 import numpy as np

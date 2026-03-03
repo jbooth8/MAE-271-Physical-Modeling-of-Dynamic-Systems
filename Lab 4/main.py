@@ -15,7 +15,7 @@ params["g"] = 9.8  # gravity (m/s^2)
 # Mass
 params["m_tot"] = 3000.0 / 2.2  # Total vehicle mass (lbs -> kg)
 params["msmus"] = 5.0           # Sprung to unsprung mass ratio
-params["mams"] = 0.04          # Actuator to sprung mass ratio
+params["mams"] = 0.04           # Actuator to sprung mass ratio
 
 # Damping ratios
 params["zeta_s"] = 0.7  # Passive damping ratio
