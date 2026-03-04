@@ -1,4 +1,5 @@
 from typing import Any
+from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -6,36 +7,49 @@ import numpy as np
 import pandas as pd
 
 
-def plot_time(solutions):
-    fig_acc = plt.figure()
-    fig_pow = plt.figure()
-    acc = fig_acc.add_subplot()
-    pow = fig_pow.add_subplot()
+def plot_2d(solutions, plot_keys: list[tuple[str, str]]):
+    fig = plt.figure()
+
+    # ---- Generate axes for each key pair ----
+    axes: dict[tuple[str, str], Axes] = {}  # Keys and their associated axis
+    x_keys: dict[str, list[Axes]] = {}
+    y_keys: dict[str, list[Axes]] = {}
+    keys_dict: dict[str, list[float]] = {}  # Consolidated data
+    for keys in plot_keys:
+        assert keys not in axes.keys(), f"Redundant plotting keys '{keys}'. Each plotting key tuple should be unique."
+        if keys[0] in x_keys.keys():
+            seen_ax = x_keys[keys[0]][0]
+            axes[keys] = seen_ax.twinx()
+        else:
+            if keys[1] in y_keys.keys():
+                seen_ax = x_keys[keys[0]][0]
+                axes[keys] = seen_ax.twiny()
+            else:
+                axes[keys] = fig.add_subplot()
+
+        x_keys[keys[0]].append(axes[keys])
+        y_keys[keys[1]].append(axes[keys])
+
+    assert len(x_keys.keys()) > 2, f"Too many x-axes for 2D plot: {x_keys}. Maximum is 2."
+    assert len(y_keys.keys()) > 2, f"Too many y-axes for 2D plot: {y_keys}. Maximum is 2."
+
     for solution in solutions:
         name = solution["name"]
-        df = solution["data"]
+        df: pd.DataFrame = solution["data"]
 
-        t_vals = df.get("t").to_numpy()
-        X_vals = df.get("X").to_numpy()
-        Y_vals = df.get("Y").to_numpy()
-        a_s_vals = df.get("a_s").to_numpy()
-        P_c_vals = df.get("P_c").to_numpy()
-        dYdX_vals = df.get("dYdX").to_numpy()
+        # Collect data for all referenced keys in solution
+        for key in keys_dict.keys():
+            keys_dict[key] = df.get(key).to_numpy()
 
+        for (x_key, y_key) in plot_keys:
         acc.plot(t_vals, a_s_vals, label=f"sprung mass acceleration: {name}")
-        pow.plot(t_vals, P_c_vals, label=f"actuator power: {name}")
         acc.plot(t_vals, dYdX_vals, label=f"dYdX: {name}")
-        pow.plot(t_vals, dYdX_vals, label=f"dYdX: {name}")
         # theta_ax.plot(ts, tan_theta_vals, label="tan_theta")
     acc.legend()
-    pow.legend()
     acc.set_title("Acceleration vs. Time")
-    pow.set_title("Power vs. Time")
     acc.set_xlabel("time (s)")
-    pow.set_xlabel("time (s)")
     acc.set_ylabel("accleration (m/s^2)")
-    pow.set_ylabel("power (watts)")
-    return fig_acc, fig_pow
+    return fig
 
 
 def plot_ani(solutions: list[dict[str, Any]], interval: int = 10):
