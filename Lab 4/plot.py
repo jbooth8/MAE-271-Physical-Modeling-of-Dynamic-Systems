@@ -32,14 +32,24 @@ def plot_2d(
             seen_ax = x_keys[keys[0]][0]
             axes[keys] = seen_ax.twinx()
             x_keys[keys[0]].append(axes[keys])
-            y_keys[keys[1]].append(axes[keys])
+            
+            # Add corresponding y-key to dict
+            if keys[1] in y_keys.keys():
+                y_keys[keys[1]].append(axes[keys])
+            else:
+                y_keys[keys[1]] = [axes[keys]]
         else:
             if keys[1] in y_keys.keys():
                 # If y-key has been seen before, make a copy of the Axes associated with it
                 seen_ax = y_keys[keys[1]][0]
                 axes[keys] = seen_ax.twiny()
-                x_keys[keys[0]].append(axes[keys])
                 y_keys[keys[1]].append(axes[keys])
+                
+                # Add corresponding x-key to dict
+                if keys[0] in x_keys.keys():
+                    x_keys[keys[0]].append(axes[keys])
+                else:
+                    x_keys[keys[0]] = [axes[keys]]
             elif i > 0:
                 phantom_x_axis = axes[plot_keys[0]].twinx()
                 axes[keys] = phantom_x_axis.twiny()

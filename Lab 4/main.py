@@ -53,10 +53,17 @@ t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
 
 # Run simulations
 solutions: list[str, dict[str, float]] = []
-solutions.append(solve_problem(params, t_eval, "baseline"))
+params["K_p"] = 0.25
+solutions.append(solve_problem(params, t_eval, f"K_p = {params["K_p"]}"))
+
+params["K_p"] = 1
+solutions.append(solve_problem(params, t_eval, f"K_p = {params["K_p"]}"))
+
+params["K_p"] = 4
+solutions.append(solve_problem(params, t_eval, f"K_p = {params["K_p"]}"))
 
 # ani = plot_ani(solutions)
-fig = plot_2d(solutions, [("x", "theta"), ("d_x", "w_fw")], "X vs. Theta")
+fig = plot_2d(solutions, [("x", "theta"), ("x", "w_fw"), ("P", "w_fw")], "X vs. Theta")
 # plt.axis('equal')
 
 # fig = plot_time(solutions)
