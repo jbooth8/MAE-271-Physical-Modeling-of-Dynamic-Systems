@@ -52,27 +52,28 @@ def get_func(params: dict[str, float]):
         s["w_fw"] = s["p_fw"] / s["J_fw"]                               # Flywheel angular velocity
         s["x"] = np.sqrt(s["L"]**2 - s["R"]**2 * sth**2) - s["R"] * cth # Piston position
         s["d_x"] = m_theta * s["w_fw"]                                  # Piston velocity (dx/dtheta * dtheta/dt)
+        s["V"] = s["A_p"] * (s["L"] + s["R"] - s["x"]) + s["V_TDC"]              # Cylinder volume (m^3)
 
         #----- Air -------------------------------------------
         # Pressures
-        s["P"] = s["P_0"] * (1 / (1 - s["q_air"] / s["V_0"])**s["gamma"] - 1)   # Cylinder pressure
+        s["P"] = s["P_0"] * (s["V"]/s["q_air"])**s["gamma"]   # Cylinder pressure
         s["P_acc"] = s["q_acc"] / s["C_acc"]    # Accumulator pressure
         
         # Delta pressures
-        del_P_i = 0 - s["P"]    # Pressure delta at inlet check-valve
+        del_P_i = s["P_0"] - s["P"]    # Pressure delta at inlet check-valve
         del_P_o  = s["P"] - s["P_acc"]  # Pressure delta at accumulator check-valve
         
         # Check valve areas
-        s["A_i"] = 0 if del_P_i <= 0 else s["A_i"]  # Inlet check-valve area correction
-        s["A_o"] = 0 if del_P_i <= 0 else s["A_o"]  # Accumulator check-valve area correction
+        s["A_i"] = 0 if del_P_i <= 0 else s["A_i_nom"]  # Inlet check-valve area correction
+        s["A_o"] = 0 if del_P_i <= 0 else s["A_o_nom"]  # Accumulator check-valve area correction
         
         # Inlet/accumulator flow rates
-        Q_i = s["A_i"] * np.sqrt(2 / s["rho"] * np.abs(del_P_i)) * np.sign(del_P_i) # Inlet air flow rate
-        Q_o = s["A_o"] * np.sqrt(2 / s["rho"] * np.abs(del_P_o)) * np.sign(del_P_o) # Accumulator air flow rate
+        s["Q_i"] = s["A_i"] * np.sqrt(2 / s["rho"] * np.abs(del_P_i)) * np.sign(del_P_i) # Inlet air flow rate
+        s["Q_o"] = s["A_o"] * np.sqrt(2 / s["rho"] * np.abs(del_P_o)) * np.sign(del_P_o) # Accumulator air flow rate
         
         # State flow rates
-        s["d_q_air"] = 1 / s["A_p"] * m_theta * (s["p_fw"] / s["J_fw"]) + Q_i - Q_o # Cylinder air flow rate
-        s["d_q_acc"] = Q_o                                                          # Accumulator air flow rate
+        s["d_q_air"] = s["A_p"] * m_theta * (s["p_fw"] / s["J_fw"]) + s["Q_i"] - s["Q_o"]   # Cylinder air flow rate
+        s["d_q_acc"] = s["Q_o"]                                                             # Accumulator air flow rate
 
         #----- Flywheel controller and acceleration ----------
         s["tau_in"] = s["K_p"] * (s["w_fw_des"] - s["w_fw"])    # Controller torque
@@ -85,7 +86,6 @@ def get_func(params: dict[str, float]):
             s["d_q_acc"],
             s["d_p_fw"], # Don't worry, this is a float, not an NDArray
             ]
-
         return d_state, s
 
     def func_wrap(t: float, state: list[float]):

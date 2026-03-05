@@ -1,54 +1,92 @@
 from typing import Any
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
+from matplotlib.colors import hsv_to_rgb
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
 import pandas as pd
 
 
-def plot_2d(solutions, plot_keys: list[tuple[str, str]]):
+def plot_2d(
+    solutions: list[dict[str, float] | dict[str, pd.DataFrame]], 
+    plot_keys: list[tuple[str, str]], 
+    title: str
+    ):
+
     fig = plt.figure()
+
+    hue = np.linspace(0, 1, len(plot_keys), endpoint=False)
+    sat = np.linspace(1, 0.2, len(solutions))
+    val = 0.8
 
     # ---- Generate axes for each key pair ----
     axes: dict[tuple[str, str], Axes] = {}  # Keys and their associated axis
     x_keys: dict[str, list[Axes]] = {}
     y_keys: dict[str, list[Axes]] = {}
     keys_dict: dict[str, list[float]] = {}  # Consolidated data
-    for keys in plot_keys:
+    for i, keys in enumerate(plot_keys):
         assert keys not in axes.keys(), f"Redundant plotting keys '{keys}'. Each plotting key tuple should be unique."
         if keys[0] in x_keys.keys():
+            # If x-key has been seen before, make a copy of the Axes associated with it
             seen_ax = x_keys[keys[0]][0]
             axes[keys] = seen_ax.twinx()
+            x_keys[keys[0]].append(axes[keys])
+            y_keys[keys[1]].append(axes[keys])
         else:
             if keys[1] in y_keys.keys():
-                seen_ax = x_keys[keys[0]][0]
+                # If y-key has been seen before, make a copy of the Axes associated with it
+                seen_ax = y_keys[keys[1]][0]
                 axes[keys] = seen_ax.twiny()
-            else:
+                x_keys[keys[0]].append(axes[keys])
+                y_keys[keys[1]].append(axes[keys])
+            elif i > 0:
+                phantom_x_axis = axes[plot_keys[0]].twinx()
+                axes[keys] = phantom_x_axis.twiny()
+                x_keys[keys[0]] = [phantom_x_axis]
+                y_keys[keys[1]] = [axes[keys]]
+            else: 
+                # If neither key in key-pair have been seen before, 
+                # make a new plot and create new entries for the keys
                 axes[keys] = fig.add_subplot()
+                x_keys[keys[0]] = [axes[keys]]
+                y_keys[keys[1]] = [axes[keys]]
 
-        x_keys[keys[0]].append(axes[keys])
-        y_keys[keys[1]].append(axes[keys])
 
-    assert len(x_keys.keys()) > 2, f"Too many x-axes for 2D plot: {x_keys}. Maximum is 2."
-    assert len(y_keys.keys()) > 2, f"Too many y-axes for 2D plot: {y_keys}. Maximum is 2."
+    assert len(x_keys.keys()) <= 2, f"Too many x-axes for 2D plot: {x_keys}. Maximum is 2."
+    assert len(y_keys.keys()) <= 2, f"Too many y-axes for 2D plot: {y_keys}. Maximum is 2."
 
-    for solution in solutions:
+    for j, solution in enumerate(solutions):
         name = solution["name"]
         df: pd.DataFrame = solution["data"]
 
         # Collect data for all referenced keys in solution
-        for key in keys_dict.keys():
+        for key in (x_keys.keys() | y_keys.keys()):
             keys_dict[key] = df.get(key).to_numpy()
 
-        for (x_key, y_key) in plot_keys:
-        acc.plot(t_vals, a_s_vals, label=f"sprung mass acceleration: {name}")
-        acc.plot(t_vals, dYdX_vals, label=f"dYdX: {name}")
-        # theta_ax.plot(ts, tan_theta_vals, label="tan_theta")
-    acc.legend()
-    acc.set_title("Acceleration vs. Time")
-    acc.set_xlabel("time (s)")
-    acc.set_ylabel("accleration (m/s^2)")
+        for i, keys in enumerate(plot_keys):
+            axes[keys].plot(
+                keys_dict[keys[0]], keys_dict[keys[1]], 
+                label=f"{keys[0]} vs. {keys[1]}: {name}", 
+                c=hsv_to_rgb([hue[i], sat[j], val])
+                )
+    
+    # Add axis labels for each key on each axis
+    for i, key in enumerate(x_keys):
+        x_keys[key][0].set_xlabel(f"{key}")
+        if i == 1: 
+            x_keys[key][0].xaxis.tick_top()
+            x_keys[key][0].xaxis.set_label_position("top")
+    for i, key in enumerate(y_keys):
+        y_keys[key][0].set_ylabel(f"{key}")
+        if i == 1: 
+            y_keys[key][0].yaxis.tick_right()
+            y_keys[key][0].yaxis.set_label_position("right")
+
+    # Set plot title using a single axis
+    axes[plot_keys[0]].set_title(title, y=1.12)
+    fig.legend() # Add legend
+    fig.tight_layout()
     return fig
 
 

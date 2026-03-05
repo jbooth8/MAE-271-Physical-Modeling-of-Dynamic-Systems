@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from solve_problem import solve_problem
-from plot import plot_time, plot_ani
+from plot import plot_2d, plot_ani
 plt.rcParams["animation.html"] = "jshtml"
 
 # -----------------------------
@@ -44,8 +44,8 @@ params["C_acc"] = params["V_acc"] / (params["rho"] * params["c"]**2)    # Accumu
 
 # Time
 t_start: float = 0
-t_end: float = 1
-t_increment: float = 0.001
+t_end: float = 0.2
+t_increment: float = 0.0001
 
 t_span = (t_start, t_end)
 t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
@@ -56,7 +56,7 @@ solutions: list[str, dict[str, float]] = []
 solutions.append(solve_problem(params, t_eval, "baseline"))
 
 # ani = plot_ani(solutions)
-fig = plot_time(solutions)
+fig = plot_2d(solutions, [("x", "theta"), ("d_x", "w_fw")], "X vs. Theta")
 # plt.axis('equal')
 
 # fig = plot_time(solutions)
