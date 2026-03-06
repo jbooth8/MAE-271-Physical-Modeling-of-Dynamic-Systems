@@ -9,15 +9,33 @@ import pandas as pd
 
 
 def plot_2d(
-    solutions: list[dict[str, float] | dict[str, pd.DataFrame]], 
+    solutions: list[dict[str, str | pd.DataFrame]], 
     plot_keys: list[tuple[str, str]], 
     title: str
     ):
+    '''
+    Generate a plot for all pairs of plot_keys using the given solutions.
+    This function intelligently shares axes when possible and generates new
+    axes when necessary.
+
+    Parameters:
+        solutions (list[dict[str, str | pandas.DataFrame]]): The list of solutions
+            to plot where in each solution is a dict with keys "name" and "data",
+            where "name" is a string describing the particular solution and "data"
+            is a pandas DataFrame object.
+        plot_keys (list[tuple[str, str]]): A list of key-pairs to plot. Each key in
+            the key-pairs must be keys in the solution["data"] DataFrame.
+        title (str): Title of the plot.
+
+    Returns:
+        fig (matplotlib Figure): The Figure object associated with this plot.
+    '''
 
     fig = plt.figure()
 
+    # Declare colors for each pair of plot_keys. The color will fade with different solutions
     hue = np.linspace(0, 1, len(plot_keys), endpoint=False)
-    sat = np.linspace(1, 0.2, len(solutions))
+    sat = np.linspace(1, 0.1, len(solutions))
     val = 0.8
 
     # ---- Generate axes for each key pair ----
