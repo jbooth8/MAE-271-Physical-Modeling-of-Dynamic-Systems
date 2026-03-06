@@ -53,8 +53,8 @@ def plot_2d(
             elif i > 0:
                 phantom_x_axis = axes[plot_keys[0]].twinx()
                 axes[keys] = phantom_x_axis.twiny()
-                x_keys[keys[0]] = [phantom_x_axis]
-                y_keys[keys[1]] = [axes[keys]]
+                x_keys[keys[0]] = [axes[keys]]
+                y_keys[keys[1]] = [phantom_x_axis]
             else: 
                 # If neither key in key-pair have been seen before, 
                 # make a new plot and create new entries for the keys
@@ -84,12 +84,12 @@ def plot_2d(
     # Add axis labels for each key on each axis
     for i, key in enumerate(x_keys):
         x_keys[key][0].set_xlabel(f"{key}")
-        if i == 1: 
+        if i > 0: 
             x_keys[key][0].xaxis.tick_top()
             x_keys[key][0].xaxis.set_label_position("top")
     for i, key in enumerate(y_keys):
         y_keys[key][0].set_ylabel(f"{key}")
-        if i == 1: 
+        if i > 0: 
             y_keys[key][0].yaxis.tick_right()
             y_keys[key][0].yaxis.set_label_position("right")
 

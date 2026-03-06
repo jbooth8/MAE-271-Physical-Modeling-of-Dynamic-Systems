@@ -53,17 +53,20 @@ t_eval = np.arange(min(t_span), max(t_span)+t_increment, t_increment)
 
 # Run simulations
 solutions: list[str, dict[str, float]] = []
-params["K_p"] = 0.25
-solutions.append(solve_problem(params, t_eval, f"K_p = {params["K_p"]}"))
+params["K_p"] = 0.25 / 10
+solutions.append(solve_problem(params, t_eval, f"K_p = {params['K_p']}"))
 
-params["K_p"] = 1
-solutions.append(solve_problem(params, t_eval, f"K_p = {params["K_p"]}"))
+params["K_p"] = 1 / 10
+solutions.append(solve_problem(params, t_eval, f"K_p = {params['K_p']}"))
 
-params["K_p"] = 4
-solutions.append(solve_problem(params, t_eval, f"K_p = {params["K_p"]}"))
+params["K_p"] = 4 / 10
+solutions.append(solve_problem(params, t_eval, f"K_p = {params['K_p']}"))
 
 # ani = plot_ani(solutions)
-fig = plot_2d(solutions, [("x", "theta"), ("x", "w_fw"), ("P", "w_fw")], "X vs. Theta")
+fig1 = plot_2d(solutions, [("x", "theta"), ("d_x", "w_fw")], "X vs. Theta")
+fig2 = plot_2d(solutions, [("t", "P / P_0")], "P / P_0 vs. Time")
+fig2 = plot_2d(solutions, [("t", "w_fw")], "w_fw vs. Time")
+fig2 = plot_2d(solutions, [("P / P_0", "V / V_0")], "V / V_0 vs. P / P_0")
 # plt.axis('equal')
 
 # fig = plot_time(solutions)

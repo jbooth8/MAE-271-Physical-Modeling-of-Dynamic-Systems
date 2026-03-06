@@ -52,20 +52,24 @@ def get_func(params: dict[str, float]):
         s["w_fw"] = s["p_fw"] / s["J_fw"]                               # Flywheel angular velocity
         s["x"] = np.sqrt(s["L"]**2 - s["R"]**2 * sth**2) - s["R"] * cth # Piston position
         s["d_x"] = m_theta * s["w_fw"]                                  # Piston velocity (dx/dtheta * dtheta/dt)
-        s["V"] = s["A_p"] * (s["L"] + s["R"] - s["x"]) + s["V_TDC"]              # Cylinder volume (m^3)
+        s["V"] = s["A_p"] * (s["L"] + s["R"] - s["x"]) + s["V_TDC"]     # Cylinder volume (m^3)
+        s["V / V_0"] = s["V"] / s["V_0"]                                # Cylinder volume ratio
 
         #----- Air -------------------------------------------
         # Pressures
-        s["P"] = s["P_0"] * (s["V"]/s["q_air"])**s["gamma"]   # Cylinder pressure
+        s["P"] = s["P_0"] * ((s["V_0"]/s["q_air"])**s["gamma"] - 1)   # Cylinder pressure
         s["P_acc"] = s["q_acc"] / s["C_acc"]    # Accumulator pressure
         
+        s["P / P_0"] = s["P"] / s["P_0"]   # Cylinder pressure ratio
+        s["P_acc / P_0"] = s["P_acc"] / s["P_0"]    # Accumulator pressure ratio
+        
         # Delta pressures
-        del_P_i = s["P_0"] - s["P"]    # Pressure delta at inlet check-valve
+        del_P_i = 0 - s["P"]    # Pressure delta at inlet check-valve
         del_P_o  = s["P"] - s["P_acc"]  # Pressure delta at accumulator check-valve
         
         # Check valve areas
         s["A_i"] = 0 if del_P_i <= 0 else s["A_i_nom"]  # Inlet check-valve area correction
-        s["A_o"] = 0 if del_P_i <= 0 else s["A_o_nom"]  # Accumulator check-valve area correction
+        s["A_o"] = 0 if del_P_o <= 0 else s["A_o_nom"]  # Accumulator check-valve area correction
         
         # Inlet/accumulator flow rates
         s["Q_i"] = s["A_i"] * np.sqrt(2 / s["rho"] * np.abs(del_P_i)) * np.sign(del_P_i) # Inlet air flow rate
