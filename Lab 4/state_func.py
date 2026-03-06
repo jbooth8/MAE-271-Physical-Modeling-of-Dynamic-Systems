@@ -81,6 +81,7 @@ def get_func(params: dict[str, float]):
 
         #----- Flywheel controller and acceleration ----------
         s["tau_in"] = s["K_p"] * (s["w_fw_des"] - s["w_fw"])    # Controller torque
+        s["power"] = s["tau_in"] * s["w_fw"]
         s["d_p_fw"] = s["tau_in"] - m_theta * s["A_p"] * s["P"] # Rotational momentum acceleration (sum of forces)
 
         #----- Concatenate state derivatives -----------------
