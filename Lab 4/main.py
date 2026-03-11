@@ -10,37 +10,22 @@ plt.rcParams["animation.html"] = "jshtml"
 params: dict[str, float] = {}
 
 # Flywheel and piston rod
-params["m_fw"] = 10 / 2.2       # Flywheel mass (lbs -> kg)
-params["R"] = 4 * 0.0254        # Flywheel rod joint radius (in -> m)
-params["L"] = 4 * params["R"]   # Rod length (m)
-params["J_fw"] = params["m_fw"] * params["R"]**2 / 2    # Flywheel moment of inertia (kg * m^2)
+params["a"] = 3       # a (ft)
+params["weight"] = 1500        # weight (lbs)
+params["J_r"] = params["weight"]*(2*params["a"])**2   # J_r
+params["D"] = 2.5    # Piston diameters (in)
+params["g_p"] = 1                      # Ball screw pitch (in)
+params["g_a"] = params["g_p"] / (2 * np.pi)                      # Ball screw gain (in / rad)
+params["tau_i"] = 5000    # Input torque (Nm)
 
-# Piston
-params["D_p"] = 4 * 0.0254                      # Piston diameter (in -> m)
-params["A_p"] = np.pi * params["D_p"]**2 / 4    # Piston area (m^2)
-
-# Air
-params["V_st"] = params["A_p"] * 2 * params["R"]    # Volume displaced due to stroke (m^3)
-params["V_TDC"] = 80 / 10**6                        # Volume remaining at top of stroke (cc -> m^3)
-params["V_0"] = params["V_st"] + params["V_TDC"]    # Volume at BDC (m^3)
-params["P_0"] = 1 * 10**5                           # Atmospheric pressure (atm -> Pa)
-params["gamma"] = 1.4                               # Specific heat ratio
-
-# Controller
-params["w_fw_des"] = 1500 / 60 * 2 * np.pi  # Desired flywheel rotational speed (RPM -> rad/s)
-params["K_p"] = 1   # Controller proportional gain
-
-# Valves
-params["d_o"] = 0.5 * 0.0254      # Outlet check-valve flow diameter (in -> m)
-params["d_i"] = 0.5 * 0.0254      # Inlet check-valve flow diameter (in -> m)
-params["A_o_nom"] = np.pi * params["d_o"]**2 / 4  # Outlet check-valve flow area (m)
-params["A_i_nom"] = np.pi * params["d_i"]**2 / 4  # Inlet check-valve flow area (m)
-
-# Accumulator
-params["rho"] = 1.28                    # Air density at atmospheric pressure (kg/m^3)
-params["c"] = 340                       # Air speed of sound (m/s)
-params["V_acc"] = 5 * params["V_0"]     # Accumulator volume (m^3)
-params["C_acc"] = params["V_acc"] / (params["rho"] * params["c"]**2)    # Accumulator compliance (m^4*s/kg)
+params["R_w"] = 1    # Winding resistance (Ohm)
+params["R_m"] = 2    # Radius (in)
+params["m_m"] = 5                        # Rotor mass (lbs)
+params["V_0"] = params["m_m"] * params["R_m"]**2 / 2    # Rotary inertia
+params["T_m"] = 0.54        # Motor constant (Nm/A)
+params["damping_ratio"] = 0.3                               # Passive damping ratio
+params["f_n"] = 1.5 # Natural frequency (Hz)
+params["b_d"] = 2 * params["damping_ratio"] * params["f_n"] * 2*np.pi * params["weight"]    # Damping coefficient
 
 # Time
 t_start: float = 0
