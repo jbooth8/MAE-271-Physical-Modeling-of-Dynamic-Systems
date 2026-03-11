@@ -12,10 +12,11 @@ def get_func(params: dict[str, float]):
 
     # Get initial condition
     initial = [
-        0,                                      # Flywheel position (theta)
-        params["V_0"],                          # Cylinder air volume at atmospheric pressure (q_air)
-        params["V_acc"],                        # Accumulator air volume at atmospheric pressure (q_acc)
-        params["w_fw_des"] * params["J_fw"],    # Flywheel momentum (p_fw)
+        0,  # Flywheel position (theta)
+        params["V_0"],  # Cylinder air volume at atmospheric pressure (q_air)
+        0,  # Accumulator air volume at atmospheric pressure (q_acc)
+        0,  # Flywheel momentum (p_fw)
+        0,
         ]
 
     def func(t: float, state: list[float]):
@@ -36,60 +37,39 @@ def get_func(params: dict[str, float]):
         
         # Make a copy of state variables in case they get changed
         state = deepcopy(state)
-        s["theta"] = state[0]  # Actuator mass momentum
-        s["q_air"] = state[1]  # Cylinder air volume at atmospheric pressure
-        s["q_acc"] = state[2] # Accumulator air volume at atmospheric pressure
-        s["p_fw"] = state[3]  # Flywheel angular momentum
+        s["p_g"] = state[0]
+        s["p_J_m"] = state[1]
+        s["p_J_r"] = state[2]
+        s["q_L"] = state[3]
+        s["q_R"] = state[4]
+
+        s["i_c"] = s["K_a"] * s["p_J_r"] / s["J_r"]     # Controller current (A)
+
+        s["C_L"] = (s["V_0"] + s["q_L"]) / (s["rho"] * s["c"]**2)    # Left accumulator compliance (m^4*s/kg)
+        s["C_R"] = (s["V_0"] + s["q_L"]) / (s["rho"] * s["c"]**2)    # Right accumulator compliance (m^4*s/kg)
         
+        v_L = s["p_g"] / s["m"] - s["p_J_r"] * s["a"] / s["J_r"]
+        v_R = s["p_g"] / s["m"] + s["p_J_r"] * s["a"] / s["J_r"]
+        e_v_L = s["q_L"] * s["C_L"] - s["b_d"] * v_L
+        e_v_R = s["q_R"] * s["C_R"] - s["b_d"] * v_R
+        s["f_c"] = s["i_c"] * s["R_w"] + s["T_m"] * s["p_J_m"] / s["J_m"]
+        s["P_c"] = s["i_c"] * s["f_c"]  # Controller power
+
         #----- Flywheel/piston kinematics --------------------
-        # m(theta) -> dx/dtheta
-        sth = np.sin(s["theta"])
-        cth = np.cos(s["theta"])
-        R2_L2 = s["R"]**2 / s["L"]**2
-        m_theta = s["R"] * sth - R2_L2 * (s["L"] * sth * cth) / np.sqrt(1 - R2_L2 * sth**2) # Piston position derivative wrt theta
+        s["d_p_g"] = - s["m"] * s["g"] + e_v_L + e_v_R
+        s["d_p_J_m"] = s["q_L"] * s["C_L"] / (s["A"] * s["g_a"]) - s["q_R"] * s["C_R"] / (s["A"] * s["g_a"]) + s["T_m"] * s["i_c"]
+        s["d_p_J_r"] = s["tau_i"] + e_v_L / s["a"] + e_v_R / s["a"]
+        s["d_q_L"] = - v_L - s["p_J_m"] * s["A"] * s["g_a"] / s["J_m"]
+        s["d_q_R"] = - v_R - s["p_J_m"] * s["A"] * s["g_a"] / s["J_m"]
 
-        #----- Flywheel position and velocity ----------------
-        s["w_fw"] = s["p_fw"] / s["J_fw"]                               # Flywheel angular velocity
-        s["x"] = np.sqrt(s["L"]**2 - s["R"]**2 * sth**2) - s["R"] * cth # Piston position
-        s["d_x"] = m_theta * s["w_fw"]                                  # Piston velocity (dx/dtheta * dtheta/dt)
-        s["V"] = s["A_p"] * (s["L"] + s["R"] - s["x"]) + s["V_TDC"]     # Cylinder volume (m^3)
-        s["V / V_0"] = s["V"] / s["V_0"]                                # Cylinder volume ratio
-
-        #----- Air -------------------------------------------
-        # Pressures
-        s["P"] = s["P_0"] * ((s["V_0"]/s["q_air"])**s["gamma"] - 1)   # Cylinder pressure
-        s["P_acc"] = s["q_acc"] / s["C_acc"]    # Accumulator pressure
-        
-        s["P / P_0"] = s["P"] / s["P_0"]   # Cylinder pressure ratio
-        s["P_acc / P_0"] = s["P_acc"] / s["P_0"]    # Accumulator pressure ratio
-        
-        # Delta pressures
-        del_P_i = 0 - s["P"]    # Pressure delta at inlet check-valve
-        del_P_o  = s["P"] - s["P_acc"]  # Pressure delta at accumulator check-valve
-        
-        # Check valve areas
-        s["A_i"] = 0 if del_P_i <= 0 else s["A_i_nom"]  # Inlet check-valve area correction
-        s["A_o"] = 0 if del_P_o <= 0 else s["A_o_nom"]  # Accumulator check-valve area correction
-        
-        # Inlet/accumulator flow rates
-        s["Q_i"] = s["A_i"] * np.sqrt(2 / s["rho"] * np.abs(del_P_i)) * np.sign(del_P_i) # Inlet air flow rate
-        s["Q_o"] = s["A_o"] * np.sqrt(2 / s["rho"] * np.abs(del_P_o)) * np.sign(del_P_o) # Accumulator air flow rate
-        
-        # State flow rates
-        s["d_q_air"] = s["A_p"] * m_theta * (s["p_fw"] / s["J_fw"]) + s["Q_i"] - s["Q_o"]   # Cylinder air flow rate
-        s["d_q_acc"] = s["Q_o"]                                                             # Accumulator air flow rate
-
-        #----- Flywheel controller and acceleration ----------
-        s["tau_in"] = s["K_p"] * (s["w_fw_des"] - s["w_fw"])    # Controller torque
-        s["power"] = s["tau_in"] * s["w_fw"]
-        s["d_p_fw"] = s["tau_in"] - m_theta * s["A_p"] * s["P"] # Rotational momentum acceleration (sum of forces)
 
         #----- Concatenate state derivatives -----------------
         d_state: list[float] = [
-            s["w_fw"],
-            s["d_q_air"],
-            s["d_q_acc"],
-            s["d_p_fw"], # Don't worry, this is a float, not an NDArray
+            s["d_p_g"],
+            s["d_p_J_m"],
+            s["d_p_J_r"],
+            s["d_q_L"],
+            s["d_q_R"], # Don't worry, this is a float, not an NDArray
             ]
         return d_state, s
 
